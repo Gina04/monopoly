@@ -17,14 +17,15 @@ type Acciones = [Accion]
 type Accion = Persona -> Persona
 
 ----Accesssors-------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 mapNombre:: (String -> String)->Persona ->Persona
 mapNombre f unJugador = unJugador{nombre = f.nombre$unJugador}
 
 mapDinero:: (Int -> Int)-> Persona ->Persona 
 mapDinero f unJugador= unJugador{dinero = f.dinero$ unJugador}
 
-mapTactica::String-> Persona -> Persona 
-mapTactica otroValor unJugador = unJugador{tactica = otroValor}
+cambiarTactica::String-> Persona -> Persona 
+cambiarTactica otroValor unJugador = unJugador{tactica = otroValor}
 
 
 mapPropiedades:: ([Propiedad]->[Propiedad])->Persona ->Persona
@@ -34,7 +35,7 @@ mapAcciones:: (Acciones -> Acciones)->Persona -> Persona
 mapAcciones f unJugador = unJugador{acciones = f.acciones $ unJugador}
 
 -----------------------FIN ACCESSORS------------------------------------------------
------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 {-
 Cada participante comienza con $500, ninguna propiedad a su nombre y con la acción 
 pasarPorElBanco, ya que es lo primero que hacen. Además, cada participante 
@@ -60,7 +61,7 @@ carolina = Persona{
     dinero = 500, 
     tactica = "Accionista", 
     propiedades = [], 
-    acciones = [pagarAccionistas]
+    acciones = []
 
 }
 
@@ -72,12 +73,12 @@ a “Comprador compulsivo”.
 -}
 
 pasarPorElBanco:: Accion
-pasarPorElBanco unJugador = mapTactica "Comprador compulsivo". mapDinero (aumentarDinero 40) $ unJugador
+pasarPorElBanco unJugador = cambiarTactica "Comprador compulsivo". mapDinero (+40) $ unJugador
     
    
 
-aumentarDinero:: Int-> Int -> Int
-aumentarDinero unValor otroValor= (+unValor) otroValor
+--aumentarDinero:: Int-> Int -> Int
+--aumentarDinero unValor otroValor= (+unValor) otroValor
 
 
 
@@ -86,22 +87,22 @@ enojarse: suma $50 y agrega gritar a sus acciones.
 -}
 
 enojarse:: Accion
-enojarse unJugador = mapDinero (aumentarDinero 50).mapAcciones (agregarAcciones gritar )$unJugador
+enojarse unJugador = mapDinero (+50).mapAcciones (gritar : )$unJugador
 
 
 
-agregarAcciones:: Accion ->Acciones-> Acciones
-agregarAcciones unaAccion unasAcciones = unaAccion : unasAcciones   
+--agregarAcciones:: Accion ->Acciones-> Acciones
+--agregarAcciones unaAccion unasAcciones = unaAccion : unasAcciones   
 
 {-
 gritar: agrega “AHHHH” al principio de su nombre.
 
 -}
 gritar::Accion
-gritar unJugador = mapNombre (agregarPalabra "AHH") unJugador
+gritar unJugador = mapNombre (++ "AHH") unJugador
 
-agregarPalabra:: String ->String->String
-agregarPalabra unaPalabra otraPalabra = (++unaPalabra) otraPalabra     
+--agregarPalabra:: String ->String->String
+--agregarPalabra unaPalabra otraPalabra = (++unaPalabra) otraPalabra     
 
 {-
 subastar: al momento de una subasta solo quienes tengan como tácticas “Oferente singular”
@@ -112,13 +113,13 @@ de su dinero y sumar la nueva adquisición a sus propiedades.-}
 subastar:: Propiedad ->Accion
 subastar unaPropiedad unJugador
    |tieneComoTactica unJugador =
-     mapDinero (restarDinero (precio unaPropiedad)).mapPropiedades(agregarPropiedad unaPropiedad) $ unJugador
+     mapDinero (restarDinero (precio unaPropiedad)).mapPropiedades(unaPropiedad :) $ unJugador
    |otherwise = unJugador
 
 
 
-agregarPropiedad:: Propiedad ->[Propiedad]->[Propiedad]
-agregarPropiedad unaPropiedad propiedades = unaPropiedad : propiedades     
+--agregarPropiedad:: Propiedad ->[Propiedad]->[Propiedad]
+--agregarPropiedad unaPropiedad propiedades = unaPropiedad : propiedades     
 
 restarDinero:: Int -> Int -> Int
 restarDinero unValor otroValor = unValor - otroValor
@@ -134,7 +135,7 @@ Las propiedades baratas son aquellas cuyo precio es menor a $150.
 -}
 
 cobrarAlquileres:: [Propiedad]-> Accion
-cobrarAlquileres  propiedades unJugador = mapDinero (aumentarDinero (sumarAlquileres propiedades)) unJugador
+cobrarAlquileres  propiedades unJugador = mapDinero  (+sumarAlquileres propiedades) unJugador
 
 sumarAlquileres::[Propiedad] -> Int
 sumarAlquileres  propiedades= sum.map precioAlquileres$ propiedades 
@@ -156,7 +157,7 @@ en ese caso suma $200.-}
 
 pagarAccionistas:: Accion
 pagarAccionistas unJugador 
-    | esTacticaAccionista unJugador = mapDinero(aumentarDinero 200) unJugador
+    | esTacticaAccionista unJugador = mapDinero(+200) unJugador
     | otherwise = mapDinero(flip restarDinero 100) unJugador
 
 esTacticaAccionista:: Persona -> Bool
@@ -173,7 +174,7 @@ la persona sigue haciendo berrinche hasta que llegue a comprar la propiedad que 
 hacerBerrinchePor:: Propiedad->Accion
 hacerBerrinchePor unaPropiedad unJugador 
     | puedeComprarPropiedad unJugador unaPropiedad = comprarPropiedad unaPropiedad unJugador       
-    | otherwise = hacerBerrinchePor unaPropiedad (mapDinero(aumentarDinero 10).gritar $ unJugador)
+    | otherwise = hacerBerrinchePor unaPropiedad (mapDinero(+10).gritar $ unJugador)
 
 
 puedeComprarPropiedad:: Persona -> Propiedad -> Bool 
@@ -182,7 +183,7 @@ puedeComprarPropiedad unJugador unaPropiedad = precio unaPropiedad <= dinero unJ
 
 
 comprarPropiedad:: Propiedad -> Persona ->Persona
-comprarPropiedad unaPropiedad unJugador = mapPropiedades(agregarPropiedad unaPropiedad) unJugador
+comprarPropiedad unaPropiedad unJugador = mapPropiedades(unaPropiedad :) unJugador
 
 
 {-
@@ -193,8 +194,9 @@ Para ello, modelar la función últimaRonda, que dado un participante retorna un
 a todas sus acciones. 
 
 -}
-ultimaRonda:: Persona ->Accion
-ultimaRonda unJugador= foldl1 (.) (acciones unJugador)
+
+ultimaRonda:: Persona->Accion
+ultimaRonda unJugador= foldl (.) id (acciones unJugador)
 
  
 juegoFinal:: Persona -> Persona -> Persona
